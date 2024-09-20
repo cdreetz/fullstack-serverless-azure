@@ -1,34 +1,36 @@
 # Project Root
 
-├── .github/
-│ └── workflows/ # CI/CD pipeline definitions
-├── docs/ # Project documentation
-├── infrastructure/ # IaC templates (e.g., Terraform, ARM)
-│ ├── modules/ # Reusable infrastructure modules
-│ └── environments/ # Environment-specific configurations
-├── src/
-│ ├── backend/ # FastAPI application
-│ │ ├── app/
-│ │ │ ├── api/ # API routes
-│ │ │ ├── core/ # Core application code
-│ │ │ ├── models/ # Data models
-│ │ │ └── services/ # Business logic services
-│ │ ├── tests/ # Backend tests
-│ │ └── requirements.txt # Python dependencies
-│ ├── frontend/ # React or Next.js application
-│ │ ├── components/ # React components
-│ │ ├── pages/ # Next.js pages (if using Next.js)
-│ │ ├── public/ # Static assets
-│ │ ├── styles/ # CSS or styled-components
-│ │ └── package.json # Node.js dependencies
-│ └── shared/ # Shared code between frontend and backend (if any)
-├── azure-functions/
-│ ├── host.json # Azure Functions host configuration
-│ └── local.settings.json # Local settings for Azure Functions
-├── scripts/ # Utility scripts for development, deployment, etc.
-├── .gitignore
-├── README.md
-└── LICENSE
+# Project Structure
+
+- `.github/`
+  - `workflows/` - CI/CD pipeline definitions
+- `docs/` - Project documentation
+- `infrastructure/` - IaC templates (e.g., Terraform, ARM)
+  - `modules/` - Reusable infrastructure modules
+  - `environments/` - Environment-specific configurations
+- `src/`
+  - `backend/` - FastAPI application
+    - `app/`
+      - `api/` - API routes
+      - `core/` - Core application code
+      - `models/` - Data models
+      - `services/` - Business logic services
+    - `tests/` - Backend tests
+    - `requirements.txt` - Python dependencies
+  - `frontend/` - React or Next.js application
+    - `components/` - React components
+    - `pages/` - Next.js pages (if using Next.js)
+    - `public/` - Static assets
+    - `styles/` - CSS or styled-components
+    - `package.json` - Node.js dependencies
+  - `shared/` - Shared code between frontend and backend (if any)
+- `azure-functions/`
+  - `host.json` - Azure Functions host configuration
+  - `local.settings.json` - Local settings for Azure Functions
+- `scripts/` - Utility scripts for development, deployment, etc.
+- `.gitignore`
+- `README.md`
+- `LICENSE`
 
 # Azure FastAPI Serverless Project
 
