@@ -1,5 +1,8 @@
 # Project Root
 
+![Diagram](serverlessazure.png)
+
+
 ## Links
 
 - [Static React App](https://red-coast-03918001e.5.azurestaticapps.net)
