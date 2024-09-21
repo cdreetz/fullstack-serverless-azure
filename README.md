@@ -1,5 +1,10 @@
 # Project Root
 
+## Links
+
+- [Static React App](https://red-coast-03918001e.5.azurestaticapps.net)
+- [FastAPI App on Azure Functions](https://my-fastapi-function.azurewebsites.net/api/hello)
+
 # Project Structure
 
 - `.github/`

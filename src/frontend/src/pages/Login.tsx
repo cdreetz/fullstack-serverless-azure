@@ -24,6 +24,7 @@ const Login: React.FC = () => {
   return (
     <div className="login">
       <h2>Login</h2>
+      <p>(hint: test & test)</p>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div>
