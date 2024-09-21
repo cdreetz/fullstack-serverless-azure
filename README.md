@@ -1,3 +1,19 @@
+# status
+
+- done
+
+  - basic react app done
+  - created resource group, and static app service
+  - successfully got the react app deployed to the static app service
+  - setup all the IaC for the rg and static app stuff
+
+- todo
+
+  - basic fastapi backend
+  - create azure function resource
+  - deploy fastapi to functions
+  - setup IaC for azure functions
+
 # Project Root
 
 # Project Structure
