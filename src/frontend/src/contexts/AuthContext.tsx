@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode } from "react";
+import axios from "axios";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -16,8 +17,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const login = async (username: string, password: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsAuthenticated(true);
+    try {
+      const response = await axios.post(
+        "https://my-fastapi-function.azurewebsites.net/api/auth",
+        {
+          username,
+          password,
+        },
+      );
+
+      if (response.status === 200) {
+        setIsAuthenticated(true);
+      } else {
+        throw new Error("Authentication failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
   };
 
   const logout = () => {

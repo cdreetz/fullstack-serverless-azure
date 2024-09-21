@@ -5,15 +5,18 @@ import { useAuth } from "../contexts/AuthContext";
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     try {
       await login(username, password);
       navigate("/dashboard");
     } catch (error) {
+      setError("Login failed please check your credentials");
       console.error("Login failed", error);
     }
   };
@@ -21,6 +24,7 @@ const Login: React.FC = () => {
   return (
     <div className="login">
       <h2>Login</h2>
+      {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="username">Username:</label>
