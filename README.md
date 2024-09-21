@@ -1,19 +1,3 @@
-# status
-
-- done
-
-  - basic react app done
-  - created resource group, and static app service
-  - successfully got the react app deployed to the static app service
-  - setup all the IaC for the rg and static app stuff
-
-- todo
-
-  - basic fastapi backend
-  - create azure function resource
-  - deploy fastapi to functions
-  - setup IaC for azure functions
-
 # Project Root
 
 # Project Structure
@@ -34,16 +18,11 @@
     - `tests/` - Backend tests
     - `requirements.txt` - Python dependencies
   - `frontend/` - React or Next.js application
-    - `components/` - React components
-    - `pages/` - Next.js pages (if using Next.js)
-    - `public/` - Static assets
-    - `styles/` - CSS or styled-components
+    - `src/` - React or Next.js application
+      - `components/` - React components
+      - `pages/` - Next.js pages (if using Next.js)
+      - `public/` - Static assets
     - `package.json` - Node.js dependencies
-  - `shared/` - Shared code between frontend and backend (if any)
-- `azure-functions/`
-  - `host.json` - Azure Functions host configuration
-  - `local.settings.json` - Local settings for Azure Functions
-- `scripts/` - Utility scripts for development, deployment, etc.
 - `.gitignore`
 - `README.md`
 - `LICENSE`
@@ -60,8 +39,6 @@ This project implements a serverless application using FastAPI deployed on Azure
 - `/docs/`: Project documentation
 - `/infrastructure/`: Infrastructure as Code (IaC) templates
 - `/src/`: Source code for backend and frontend
-- `/azure-functions/`: Azure Functions configuration
-- `/scripts/`: Utility scripts
 
 ## Key Components
 
@@ -96,3 +73,18 @@ Please read `CONTRIBUTING.md` for details on our code of conduct and the process
 ## License
 
 This project is licensed under the MIT License - see the `LICENSE` file for details.
+
+# status
+
+- done
+
+  - basic react app done
+  - created resource group, and static app service
+  - successfully got the react app deployed to the static app service
+  - setup all the IaC for the rg and static app stuff
+  - basic fastapi backend
+  - create azure function resource
+  - deploy fastapi to functions
+
+- todo
+  - setup IaC for azure functions

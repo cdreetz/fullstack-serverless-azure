@@ -20,14 +20,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await axios.post(
         "https://my-fastapi-function.azurewebsites.net/api/auth",
+        { username, password },
         {
-          username,
-          password,
+          headers: { "Content-Type": "application/json" },
         },
       );
 
-      if (response.status === 200) {
+      if (response.status === 200 && response.data.status === "authenticated") {
         setIsAuthenticated(true);
+        console.log("Login successfule", response.data);
       } else {
         throw new Error("Authentication failed");
       }
