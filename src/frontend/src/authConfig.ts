@@ -8,8 +8,8 @@ const getRedirectUri = () => {
 
 export const msalConfig: Configuration = {
     auth: {
-        clientId: process.env.REACT_APP_MSAL_CLIENT_ID || "",
-        authority: process.env.REACT_APP_MSAL_AUTHORITY,
+        clientId: "b7f7685b-0995-44b7-9bc5-71260d2d9489",
+        authority: "https://login.microsoftonline.com/f72ddd3c-9aa7-4871-a87f-009d8d3bd1c3",
         redirectUri: getRedirectUri(),
     },
     cache: {
