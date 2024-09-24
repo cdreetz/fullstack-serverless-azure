@@ -1,9 +1,10 @@
-import React, { createContext, useState, useContext, ReactNode } from "react";
-import axios from "axios";
+import React, { createContext, useContext, ReactNode } from "react";
+import { useMsal } from "@azure/msal-react";
+import { loginRequest } from "../authConfig";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: () => Promise<void>;
   logout: () => void;
 }
 
@@ -14,32 +15,20 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { instance, accounts } = useMsal();
 
-  const login = async (username: string, password: string) => {
+  const isAuthenticated = accounts.length > 0;
+
+  const login = async () => {
     try {
-      const response = await axios.post(
-        "https://my-fastapi-function.azurewebsites.net/api/auth",
-        { username, password },
-        {
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-
-      if (response.status === 200 && response.data.status === "authenticated") {
-        setIsAuthenticated(true);
-        console.log("Login successfule", response.data);
-      } else {
-        throw new Error("Authentication failed");
-      }
+      await instance.loginPopup(loginRequest);
     } catch (error) {
       console.error("Login error:", error);
-      throw error;
     }
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
+    instance.logoutPopup();
   };
 
   return (
