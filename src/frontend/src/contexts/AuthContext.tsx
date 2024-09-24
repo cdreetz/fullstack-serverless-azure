@@ -21,7 +21,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async () => {
     try {
+      console.log("Attempting login...");
       await instance.loginPopup(loginRequest);
+      console.log("Login successful!");
     } catch (error) {
       console.error("Login error:", error);
     }
