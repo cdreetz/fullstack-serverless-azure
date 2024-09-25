@@ -9,6 +9,7 @@ import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism.css';
+//import CodeEditor from "../components/CodeEditor";
 
 interface Message {
   role: "assistant" | "user";
