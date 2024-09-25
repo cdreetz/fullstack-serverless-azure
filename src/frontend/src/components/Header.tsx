@@ -6,29 +6,21 @@ const Header: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
 
   return (
-    <header>
-      <nav>
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          {isAuthenticated ? (
-            <>
-              <li>
-                <Link to="/dashboard">Dashboard</Link>
-              </li>
-              <li>
-                <button onClick={logout}>Logout</button>
-              </li>
-            </>
-          ) : (
-            <li>
-              <Link to="/login">Login</Link>
-            </li>
-          )}
-        </ul>
-      </nav>
-    </header>
+    <div className="p-2 mb-2">
+      <Link to="/" className="text-lg font-semibold hover:text-blue-600 px-2">Home</Link>
+      {isAuthenticated ? (
+        <div className="flex gap-4 px-2">
+          <Link to="/dashboard" className="text-lg font-semibold hover:text-blue-600">Dashboard</Link>
+          <button onClick={logout} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors">
+            Logout
+          </button>
+        </div>
+      ) : (
+        <Link to="/login" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors">
+          Login
+        </Link>
+      )}
+    </div>
   );
 };
 

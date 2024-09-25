@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -67,6 +69,11 @@
     --ring: 216 34% 17%;
 
     --radius: 0.5rem;
+  }
+
+  /* Add this to set Inter as the default font */
+  html {
+    font-family: 'Inter', sans-serif;
   }
 }
 

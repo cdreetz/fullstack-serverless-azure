@@ -1,5 +1,5 @@
 import React from "react";
-import "./App.css";
+import "./index.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Header from "./components/Header";
@@ -12,20 +12,22 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="app">
+        <div className="h-screen w-screen">
           <Header />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+          <main className="h-full w-full">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </main>
         </div>
       </Router>
     </AuthProvider>

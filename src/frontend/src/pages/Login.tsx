@@ -18,13 +18,13 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleLogin} className="w-full">
+          <Button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             Sign in with Microsoft
           </Button>
         </CardContent>
