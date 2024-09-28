@@ -1,14 +1,19 @@
 import React, { useState, KeyboardEvent } from "react";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { Input } from "../components/ui/input";
-import { Card, CardHeader, CardContent, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardTitle,
+} from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import Editor from 'react-simple-code-editor';
-import { highlight, languages } from 'prismjs';
-import 'prismjs/components/prism-clike';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-python';
-import 'prismjs/themes/prism.css';
+import Editor from "react-simple-code-editor";
+import { highlight, languages } from "prismjs";
+import "prismjs/components/prism-clike";
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-python";
+import "prismjs/themes/prism.css";
 //import CodeEditor from "../components/CodeEditor";
 
 interface Message {
@@ -43,40 +48,44 @@ function Chat() {
       role: "user",
       content: prompt,
     };
-    
+
     let assistantMessage: Message;
     switch (prompt) {
       case "Write some code for me":
         assistantMessage = {
           role: "assistant",
-          content: "Certainly! I'd be happy to help you write some code. Could you tell me more about what you'd like to create? What programming language are you using, and what should the code do?"
+          content:
+            "Certainly! I'd be happy to help you write some code. Could you tell me more about what you'd like to create? What programming language are you using, and what should the code do?",
         };
         break;
       case "How to optimize React performance?":
         assistantMessage = {
           role: "assistant",
-          content: "Great question! I'd be glad to discuss React performance optimization. To get started, could you tell me about any specific performance issues you're experiencing, or are you looking for general optimization tips?"
+          content:
+            "Great question! I'd be glad to discuss React performance optimization. To get started, could you tell me about any specific performance issues you're experiencing, or are you looking for general optimization tips?",
         };
         break;
       case "Can you explain this code to me?":
         assistantMessage = {
           role: "assistant",
-          content: "Of course! I'd be happy to explain code for you. You can either paste the code you want explained in the chat here, or write it in the code editor on the right. Once you've done that, I'll do my best to break it down and explain how it works."
+          content:
+            "Of course! I'd be happy to explain code for you. You can either paste the code you want explained in the chat here, or write it in the code editor on the right. Once you've done that, I'll do my best to break it down and explain how it works.",
         };
         break;
       case "Convert this code from one language to another":
         assistantMessage = {
           role: "assistant",
-          content: "Certainly! I can help you convert code between programming languages. To get started, could you tell me what language the original code is in, and what language you'd like to convert it to? Then, you can either paste the code here or write it in the code editor on the right."
+          content:
+            "Certainly! I can help you convert code between programming languages. To get started, could you tell me what language the original code is in, and what language you'd like to convert it to? Then, you can either paste the code here or write it in the code editor on the right.",
         };
         break;
       default:
         assistantMessage = {
           role: "assistant",
-          content: "Hello! How can I assist you with your request?"
+          content: "Hello! How can I assist you with your request?",
         };
     }
-    
+
     setMessages([userMessage, assistantMessage]);
   };
 
@@ -87,8 +96,11 @@ function Chat() {
       </CardHeader>
       <CardContent className="flex-grow flex flex-col overflow-hidden">
         {messages.length === 0 ? (
-          <div className="flex-grow flex flex-col justify-end">
-            <div className="grid grid-cols-2 gap-4 my-4">
+          <div className="flex-grow flex flex-col border rounded mb-2">
+            <div className="flex justify-center items-center py-10">
+              <h1 className="text-xl">What would you like help with?</h1>
+            </div>
+            <div className="grid grid-cols-2 gap-4 m-4">
               {examplePrompts.map((prompt, index) => (
                 <Button
                   key={index}
@@ -102,30 +114,42 @@ function Chat() {
             </div>
           </div>
         ) : (
-          <ScrollArea className="flex-grow mb-4 border rounded">
+          <ScrollArea className="flex-grow mb-2 border rounded h-full">
             <div className="p-2">
               {messages.map((message, index) => (
-                <div key={index} className={`mb-2 p-2 rounded w-3/4 ${
-                  message.role === 'assistant' 
-                    ? 'bg-blue-100 border border-blue-200 self-start' 
-                    : 'bg-gray-100 border border-gray-200 self-end ml-auto text-right'
-                }`}>
+                <div
+                  key={index}
+                  className={`mb-2 p-2 rounded w-3/4 ${
+                    message.role === "assistant"
+                      ? "bg-blue-100 border border-blue-200 self-start"
+                      : "bg-gray-100 border border-gray-200 self-end ml-auto text-right"
+                  }`}
+                >
                   {message.content}
                 </div>
               ))}
             </div>
           </ScrollArea>
         )}
-        <Input
-          className="flex-shrink-0 mt-auto p-2 border border-gray-300 rounded"
-          placeholder="Type your message..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={handleKeyPress}
-        />
+        <div className="flex flex-row gap-2 w-full">
+          <Input
+            className="flex-shrink-0 mt-auto p-2 border border-gray-300 rounded w-4/5"
+            placeholder="Type your message..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+          />
+          <Button
+            // onClick={() => handleClearClick()}
+            variant="destructive"
+            className="flex-grow mt-auto"
+          >
+            Clear
+          </Button>
+        </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function CodeEditor() {
@@ -137,26 +161,28 @@ function CodeEditor() {
   };
 
   return (
-    <Card className='flex flex-col h-full'>
+    <Card className="flex flex-col h-full">
       <CardHeader>
         <CardTitle>Your Code</CardTitle>
       </CardHeader>
-      <CardContent className='flex-grow flex flex-col'>
-        <div className="flex-grow border rounded overflow-hidden mb-4">
+      <CardContent className="flex-grow flex flex-col">
+        <div className="flex-grow border rounded overflow-hidden mb-2 h-full">
           <Editor
             value={code}
             onValueChange={setCode}
-            highlight={code => highlight(code, languages.python, 'python')}
+            highlight={(code) => highlight(code, languages.python, "python")}
             padding={10}
             style={{
               fontFamily: '"Fira code", "Fira Mono", monospace',
               fontSize: 14,
-              height: '100%',
+              height: "100%",
             }}
           />
         </div>
         <div className="flex space-x-2">
-          <Button onClick={() => setCode(code)} variant="outline">Save Code</Button>
+          <Button onClick={() => setCode(code)} variant="outline">
+            Save Code
+          </Button>
         </div>
       </CardContent>
     </Card>
