@@ -1,9 +1,13 @@
 import azure.functions as func
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+#from openai import AzureOpenAI
+#import os
+#from dotenv import load_dotenv
+
 
 app = FastAPI()
 
@@ -15,12 +19,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+### VARS ###
+#load_dotenv()
+#
+#OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+#AZURE_ENDPOINT = "https://my-static-app-openai.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-03-15-preview"
+#MODEL = "gpt-4o"
+#
+#if not OPENAI_API_KEY:
+#    raise ValueError("OPENAI_API_KEY is not set")
 
 ### UTILS ###
 
 async def stream_test_func():
     for i in range(100):
         yield f"Message {i}\n"
+
+#def get_client():
+#    return AzureOpenAI(
+#        api_key=OPENAI_API_KEY,
+#        api_version="2024-05-13",
+#        azure_endpoint=AZURE_ENDPOINT
+#    )
+#
+#async def chat(prompt: str, client: AzureOpenAI):
+#    async for chunk in client.chat.completions.create(
+#        model=MODEL,
+#        messages=[
+#            {"role": "user", "content": prompt}
+#        ],
+#        stream=True
+#    ):
+#        if content := chunk.choices[0].delta.content:
+#            yield content
+
 
 
 
@@ -33,6 +65,9 @@ class Item(BaseModel):
 class LoginCredentials(BaseModel):
     username: str
     password: str
+
+#class ChatPrompt(BaseModel):
+#    prompt: str = Field(..., min_length=1, max_length=1000)
 
 
 ### API ROUTES ###
@@ -67,3 +102,7 @@ async def authenticate(credentials: LoginCredentials):
 @app.get("/api/stream/test")
 async def stream_test():
     return StreamingResponse(stream_test_func())
+
+#@app.post("/api/chat")
+#async def chat_route(prompt: ChatPrompt, client: AzureOpenAI = Depends(get_client)):
+#    return StreamingResponse(chat(prompt.prompt, client), media_type="text/plain")
