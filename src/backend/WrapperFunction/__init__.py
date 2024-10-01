@@ -1,6 +1,7 @@
 import azure.functions as func
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -14,6 +15,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+### UTILS ###
+
+async def stream_test_func():
+    for i in range(100):
+        yield f"Message {i}\n"
+
+
+
+### MODELS ###
+
 class Item(BaseModel):
     name: str
     description: str = None
@@ -21,6 +33,13 @@ class Item(BaseModel):
 class LoginCredentials(BaseModel):
     username: str
     password: str
+
+
+### API ROUTES ###
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the API root"}
 
 @app.post("/webhook")
 async def webhook(payload: dict) -> dict:
@@ -44,3 +63,7 @@ async def authenticate(credentials: LoginCredentials):
         return {"status": "authenticated", "message": "Login successful"}
     else:
         raise HTTPException(status_code=401, detail="Auth failed")
+
+@app.get("/api/stream/test")
+async def stream_test():
+    return StreamingResponse(stream_test_func())
