@@ -1,25 +1,57 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
+import { Menu } from "lucide-react";
 
 const Header: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
 
   return (
-    <div className="p-2 mb-2">
-      <Link to="/" className="text-lg font-semibold hover:text-blue-600 px-2">Home</Link>
-      {isAuthenticated ? (
-        <div className="flex gap-4 px-2">
-          <Link to="/dashboard" className="text-lg font-semibold hover:text-blue-600">Dashboard</Link>
-          <button onClick={logout} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors">
-            Logout
-          </button>
-        </div>
-      ) : (
-        <Link to="/login" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors">
-          Login
-        </Link>
-      )}
+    <div className="p-2 mb-2 flex justify-between items-center">
+      <Link to="/" className="text-lg font-semibold hover:text-blue-600">
+        Tools
+      </Link>
+      <div className="relative">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon">
+              <Menu className="h-[1.2rem] w-[1.2rem]" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Link to="/" className="w-full">Home</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link to="/summary" className="w-full">Summary</Link>
+            </DropdownMenuItem>
+            {isAuthenticated ? (
+              <>
+                <DropdownMenuItem>
+                  <Link to="/dashboard" className="w-full">Dashboard</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <button onClick={logout} className="w-full text-left text-red-500 hover:text-red-600">
+                    Logout
+                  </button>
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <DropdownMenuItem>
+                <Link to="/login" className="w-full">Login</Link>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 };
