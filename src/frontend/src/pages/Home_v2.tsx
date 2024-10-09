@@ -179,7 +179,7 @@ function CodeEditor() {
 
   return (
     <Card className="flex flex-col h-full">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row flex-shrink-0 items-center justify-between">
         <CardTitle>Your Code</CardTitle>
         <p className="text-sm text-muted-foreground">
           {currentVersionIndex === savedVersions.length - 1
@@ -189,6 +189,7 @@ function CodeEditor() {
         </p>
         <div className="flex items-center space-x-2">
           <Button
+            className="h-2"
             variant="ghost"
             size="icon"
             onClick={() => navigateVersion('prev')}
@@ -198,6 +199,7 @@ function CodeEditor() {
           </Button>
           <span>{`${currentVersionIndex + 1} of ${savedVersions.length}`}</span>
           <Button
+            className="h-2"
             variant="ghost"
             size="icon"
             onClick={() => navigateVersion('next')}

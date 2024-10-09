@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Home2 from "./pages/Home_v2";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Summary from "./pages/Summary";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const App: React.FC = () => {
@@ -20,6 +21,7 @@ const App: React.FC = () => {
               <Route path="/home2" element={<Home />} />
               <Route path="/" element={<Home2 />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/summary" element={<Summary />} />
               <Route
                 path="/dashboard"
                 element={
