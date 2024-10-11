@@ -9,11 +9,18 @@ import {
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Loader2 } from "lucide-react";
+import SummaryStatusList from "../components/SummaryStatusList";
 
 interface Document {
   name: string;
   type: string;
   file: File;
+}
+
+interface SummaryRequest {
+  id: string;
+  status: 'processing' | 'complete' | 'error';
+  downloadUrl: string | null;
 }
 
 const DocumentUpload: React.FC<{
@@ -85,6 +92,7 @@ const Summary: React.FC = () => {
   const [summary, setSummary] = useState<string>("");
   const [status, setStatus] = useState<'idle' | 'uploading' | 'processing' | 'complete' | 'error'>('idle');
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [summaryRequests, setSummaryRequests] = useState<SummaryRequest[]>([]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -111,7 +119,14 @@ const Summary: React.FC = () => {
       return;
     }
 
-    setStatus('uploading');
+    const requestId = Date.now().toString();
+    const newRequest: SummaryRequest = {
+      id: requestId,
+      status: 'processing',
+      downloadUrl: null,
+    };
+    setSummaryRequests([...summaryRequests, newRequest]);
+
     const formData = new FormData();
     documents.forEach((doc, index) => {
       formData.append(`file`, doc.file);
@@ -132,14 +147,28 @@ const Summary: React.FC = () => {
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      setDownloadUrl(url);
 
-      setSummary('Your summary is ready to download');
-      setStatus('complete');
+      setSummaryRequests(prevRequests =>
+        prevRequests.map(req =>
+          req.id === requestId
+            ? { ...req, status: 'complete', downloadUrl: url }
+            : req
+        )
+      );
+
+      setDocuments([]);
+      setSummaryType("");
+      setStatus('idle');
+      setSummary('');
     } catch (error) {
       console.error('Error generating summary:', error);
-      setStatus('error');
-      setSummary('Error generating summary. Please try again.');
+      setSummaryRequests(prevRequests =>
+        prevRequests.map(req =>
+          req.id === requestId
+            ? { ...req, status: 'error' }
+            : req
+        )
+      );
     }
   };
 
@@ -155,54 +184,30 @@ const Summary: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto mt-8">
-      <CardHeader>
-        <CardTitle>Executive Summary Generator</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <DocumentUpload onFileUpload={handleFileUpload} />
-          <DocumentList
-            documents={documents}
-            onDocumentTypeChange={handleDocumentTypeChange}
-          />
-          <SummaryTypeSelector
-            summaryType={summaryType}
-            onSummaryTypeChange={setSummaryType}
-          />
-          <Button
-            onClick={generateSummary}
-          >
-            {status === 'idle' && 'Generate Summary'}
-            {status === 'uploading' && (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Uploading...
-              </>
-            )}
-            {status === 'processing' && (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Processing...
-              </>
-            )}
-            {status === 'complete' && 'Download Summary'}
-            {status === 'error' && 'Error generating summary'}
-          </Button>
-          {status === 'complete' && summary && (
-            <>
-              <SummaryDisplay summary={summary} />
-              <Button onClick={downloadSummary}>Download Summary</Button>
-            </>
-          )}
-          {status === 'error' && (
-            <div className="text-red-500">
-              Error generating summary. Please try again.
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex w-full max-w-6xl mx-auto mt-8 space-x-4">
+      <Card className="w-2/3">
+        <CardHeader>
+          <CardTitle>Executive Summary Generator</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <DocumentUpload onFileUpload={handleFileUpload} />
+            <DocumentList
+              documents={documents}
+              onDocumentTypeChange={handleDocumentTypeChange}
+            />
+            <SummaryTypeSelector
+              summaryType={summaryType}
+              onSummaryTypeChange={setSummaryType}
+            />
+            <Button onClick={generateSummary} disabled={status === 'processing'}>
+              Generate Summary
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      <SummaryStatusList requests={summaryRequests} />
+    </div>
   );
 };
 
