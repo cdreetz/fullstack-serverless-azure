@@ -8,10 +8,12 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { Loader2 } from "lucide-react";
 
 interface Document {
   name: string;
   type: string;
+  file: File;
 }
 
 const DocumentUpload: React.FC<{
@@ -81,6 +83,8 @@ const Summary: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [summaryType, setSummaryType] = useState<string>("");
   const [summary, setSummary] = useState<string>("");
+  const [status, setStatus] = useState<'idle' | 'uploading' | 'processing' | 'complete' | 'error'>('idle');
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -88,6 +92,7 @@ const Summary: React.FC = () => {
       const newDocuments = Array.from(files).map((file) => ({
         name: file.name,
         type: "Unknown",
+        file: file,
       }));
       setDocuments([...documents, ...newDocuments]);
     }
@@ -99,18 +104,54 @@ const Summary: React.FC = () => {
     setDocuments(updatedDocuments);
   };
 
-  const generateSummary = () => {
-    const documentNames = documents.map((doc) => doc.name).join(", ");
-    setSummary(`Here we summarize ${documentNames}`);
+  const generateSummary = async () => {
+    if (documents.length === 0 || !summaryType) {
+      setStatus('error');
+      setSummary('Please upload documents and select a summary type');
+      return;
+    }
+
+    setStatus('uploading');
+    const formData = new FormData();
+    documents.forEach((doc, index) => {
+      formData.append(`file`, doc.file);
+      formData.append(`type`, doc.type);
+    });
+    formData.append("summary_type", summaryType);
+
+    try {
+      setStatus('processing');
+      const response = await fetch('http://localhost:8000/generate_summary', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate summary');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      setDownloadUrl(url);
+
+      setSummary('Your summary is ready to download');
+      setStatus('complete');
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      setStatus('error');
+      setSummary('Error generating summary. Please try again.');
+    }
   };
 
   const downloadSummary = () => {
-    const element = document.createElement("a");
-    const file = new Blob([summary], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
-    element.download = "summary.txt";
-    document.body.appendChild(element);
-    element.click();
+    if (downloadUrl) {
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = 'summary.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   return (
@@ -131,15 +172,33 @@ const Summary: React.FC = () => {
           />
           <Button
             onClick={generateSummary}
-            disabled={documents.length === 0 || !summaryType}
           >
-            Generate Summary
+            {status === 'idle' && 'Generate Summary'}
+            {status === 'uploading' && (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Uploading...
+              </>
+            )}
+            {status === 'processing' && (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Processing...
+              </>
+            )}
+            {status === 'complete' && 'Download Summary'}
+            {status === 'error' && 'Error generating summary'}
           </Button>
-          {summary && (
+          {status === 'complete' && summary && (
             <>
               <SummaryDisplay summary={summary} />
               <Button onClick={downloadSummary}>Download Summary</Button>
             </>
+          )}
+          {status === 'error' && (
+            <div className="text-red-500">
+              Error generating summary. Please try again.
+            </div>
           )}
         </div>
       </CardContent>
