@@ -24,7 +24,7 @@ const SummaryStatusList: React.FC<SummaryStatusListProps> = ({ requests }) => {
   };
 
   return (
-    <Card className="w-1/3">
+    <Card className="w-1/3 border border-solid border-[#5c5c5c] rounded-[0.25rem]">
       <CardHeader>
         <CardTitle>Summary Requests</CardTitle>
       </CardHeader>

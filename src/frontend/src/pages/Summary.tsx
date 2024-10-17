@@ -23,6 +23,7 @@ interface SummaryRequest {
   downloadUrl: string | null;
 }
 
+
 const DocumentUpload: React.FC<{
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }> = ({ onFileUpload }) => (
@@ -35,23 +36,30 @@ const DocumentUpload: React.FC<{
 const DocumentList: React.FC<{
   documents: Document[];
   onDocumentTypeChange: (index: number, type: string) => void;
-}> = ({ documents, onDocumentTypeChange }) => (
+  onDocumentRemove: (index: number) => void;
+}> = ({ documents, onDocumentTypeChange, onDocumentRemove }) => (
   <div>
     <h3 className="text-lg font-semibold mb-2">Uploaded Documents</h3>
     <ScrollArea className="h-40 border rounded p-2">
       {documents.map((doc, index) => (
         <div key={index} className="flex items-center justify-between mb-2">
-          <span>{doc.name}</span>
+          <span className="flex-grow">{doc.name}</span>
           <select
             value={doc.type}
             onChange={(e) => onDocumentTypeChange(index, e.target.value)}
-            className="border rounded p-1"
+            className="border rounded p-1 mr-2"
           >
             <option value="Unknown">Unknown</option>
             <option value="Report">Report</option>
             <option value="Presentation">Presentation</option>
             <option value="Spreadsheet">Spreadsheet</option>
           </select>
+          <button
+            onClick={() => onDocumentRemove(index)}
+            className="text-red-500 hover:text-red-700"
+          >
+            ×
+          </button>
         </div>
       ))}
     </ScrollArea>
@@ -112,6 +120,12 @@ const Summary: React.FC = () => {
     setDocuments(updatedDocuments);
   };
 
+  const handleDocumentRemove = (index: number) => {
+    const updatedDocuments = [...documents];
+    updatedDocuments.splice(index, 1);
+    setDocuments(updatedDocuments);
+  };
+
   const generateSummary = async () => {
     if (documents.length === 0 || !summaryType) {
       setStatus('error');
@@ -161,6 +175,7 @@ const Summary: React.FC = () => {
       setStatus('idle');
       setSummary('');
     } catch (error) {
+      setDocuments([]);
       console.error('Error generating summary:', error);
       setSummaryRequests(prevRequests =>
         prevRequests.map(req =>
@@ -185,9 +200,10 @@ const Summary: React.FC = () => {
 
   return (
     <div className="flex w-full max-w-6xl mx-auto mt-8 space-x-4">
-      <Card className="w-2/3">
-        <CardHeader>
-          <CardTitle>Executive Summary Generator</CardTitle>
+      <Card className="w-2/3 border border-solid border-[#5c5c5c] rounded-[0.25rem]">
+        <CardHeader className="relative">
+          <div className="absolute top-0 left-0 right-0 h-1/4 bg-[#005288]"></div>
+          <CardTitle className="relative z-10">Executive Summary Generator</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -195,14 +211,28 @@ const Summary: React.FC = () => {
             <DocumentList
               documents={documents}
               onDocumentTypeChange={handleDocumentTypeChange}
+              onDocumentRemove={handleDocumentRemove}
             />
             <SummaryTypeSelector
               summaryType={summaryType}
               onSummaryTypeChange={setSummaryType}
             />
-            <Button onClick={generateSummary} disabled={status === 'processing'}>
-              Generate Summary
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                onClick={generateSummary}
+                disabled={status === 'processing' || documents.length === 0 || !summaryType}
+                className="bg-[#0078ae] hover:bg-[#005b84] text-white font-['Source_Sans_Pro_Web',_'Helvetica_Neue',_Helvetica,_Roboto,_Arial,_sans-serif] text-[1.06rem] border border-solid border-[#5c5c5c] rounded-[0.25rem]"
+              >
+                {status === 'processing' ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Generate Summary'
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
