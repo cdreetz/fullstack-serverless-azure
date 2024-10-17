@@ -29,7 +29,12 @@ const DocumentUpload: React.FC<{
 }> = ({ onFileUpload }) => (
   <div>
     <h3 className="text-lg font-semibold mb-2">Upload Documents</h3>
-    <Input type="file" multiple onChange={onFileUpload} />
+    <Input
+      type="file"
+      multiple
+      onChange={onFileUpload}
+      className="file:underline file:hover:cursor-pointer"
+    />
   </div>
 );
 
@@ -217,7 +222,7 @@ const Summary: React.FC = () => {
               summaryType={summaryType}
               onSummaryTypeChange={setSummaryType}
             />
-            <div className="flex justify-center">
+            <div className="flex justify-center space-x-4">
               <Button
                 onClick={generateSummary}
                 disabled={status === 'processing' || documents.length === 0 || !summaryType}
@@ -231,6 +236,15 @@ const Summary: React.FC = () => {
                 ) : (
                   'Generate Summary'
                 )}
+              </Button>
+              <Button
+                onClick={() => {
+                  setDocuments([]);
+                  setSummaryType("");
+                }}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-['Source_Sans_Pro_Web',_'Helvetica_Neue',_Helvetica,_Roboto,_Arial,_sans-serif] text-[1.06rem] border border-solid border-[#5c5c5c] rounded-[0.25rem]"
+              >
+                Reset
               </Button>
             </div>
           </div>

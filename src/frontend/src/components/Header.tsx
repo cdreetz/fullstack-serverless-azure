@@ -30,8 +30,12 @@ const Header: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   return (
     <div className="p-2 mb-2 flex justify-between items-center">
-      <Link to="/" className="text-lg font-semibold hover:text-blue-600">
-        Tools
+      <Link to="/" className="hover:opacity-80 transition-opacity">
+        <img
+          src="https://www.dhs.gov/xlibrary/dhsweb/_site/assets/img/DHS_4R_Blue.svg"
+          alt="DHS Logo"
+          className="h-8 w-auto"
+        />
       </Link>
       <div className="relative">
         <ThemeToggle />
