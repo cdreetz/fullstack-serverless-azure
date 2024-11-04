@@ -1,194 +1,211 @@
-from typing import List, Dict
+import base64
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.core.credentials import AzureKeyCredential
+from dataclasses import dataclass
 from openai import AzureOpenAI
-import os
+from typing import List, Dict
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
+# Output document sections
+# Section 1: Water (floods, ports)
+# Section 2: Fire (wildfires, fire stations)
+# Section 3: Administrative (employees, establishments, admin supprt, etc.)
+# Section 4: Other (anything else)
+
+class Document:
+    def __init__(self, sections: Dict[str, str]):
+        self.sections = sections
+
+
 class DocumentProcessor:
-    def __init__(self, 
-                 doc_intelligence_key: str, 
-                 doc_intelligence_endpoint: str,
-                 openai_key: str, 
-                 openai_endpoint: str):
-        # Initialize Azure Document Intelligence
-        self.doc_client = DocumentIntelligenceClient(
-            endpoint=doc_intelligence_endpoint,
-            credential=AzureKeyCredential(doc_intelligence_key)
-        )
-        
-        # Initialize Azure OpenAI
-        self.openai_client = AzureOpenAI(
-            api_key=openai_key,
-            api_base=openai_endpoint
-        )
-    
-    def process_documents(self, document_paths: List[str]) -> Dict[str, str]:
-        """Main pipeline to process documents and generate summaries"""
-        
-        # 1. Extract content from all documents
-        all_content = []
-        for path in document_paths:
-            content = self.extract_content(path)
-            all_content.extend(content)
-            
-        # 2. Classify and group content by section
-        sections = self.classify_sections(all_content)
-        
-        # 3. Generate summaries for each section
-        summaries = {}
-        for section_type, content in sections.items():
-            if content:  # Only process sections with content
-                prompt = self._get_section_prompt(section_type, content)
-                summary = self.generate_summary(prompt)
-                summaries[section_type] = summary
-                
-        return summaries
+    def __init__(self, doc_client, openai_client):
+        self.doc_client = doc_client
+        self.openai_client = openai_client
 
-    def extract_content(self, document_path: str) -> List[dict]:
-        """Extract text from document using Azure Document Intelligence"""
-        with open(document_path, "rb") as doc:
-            poller = self.doc_client.begin_analyze_document(
-                "prebuilt-layout", doc
-            )
+    def process_document(self, pdf_path, example_document):
+        """Extract text from a PDF file"""
+        with open(pdf_path, "rb") as doc:
+            file_content = doc.read()
+            file_content_base64 = base64.b64encode(file_content).decode("utf-8")
+
+        analyze_request = {
+            "base64Source": file_content_base64
+        }
+        poller = self.doc_client.begin_analyze_document(
+            "prebuilt-layout", 
+            analyze_request=analyze_request
+        )
         result = poller.result()
-        
-        # Extract paragraphs with their confidence scores
+
         content = []
-        for page in result.pages:
-            for paragraph in page.paragraphs:
-                content.append({
-                    'text': paragraph.content,
-                    'confidence': paragraph.confidence
-                })
-        return content
+        for paragraph in result.paragraphs:
+            content.append({
+                'text': paragraph.content,
+                'role': paragraph.role
+            })
 
-    def _get_section_classification(self, text: str) -> str:
-        """Classify text into a section category using Azure OpenAI"""
-        prompt = f"""Classify the following text into one of these categories:
-        - administrative (gov procedures, requirements, deadlines)
-        - financial (funding, budgets, costs)
-        - operational (how things work, processes)
-        - general (doesn't fit above categories)
-
-        Text to classify:
-        {text[:500]}...
-
-        Return only the category name, nothing else."""
-        
-        response = self.openai_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a document classification assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0,
-            max_tokens=10
-        )
-        
-        return response.choices[0].message.content.strip().lower()
-
-    def classify_sections(self, content_blocks: List[dict]) -> Dict[str, List[str]]:
-        """Group content blocks into sections by type"""
-        sections = {
-            "administrative": [],
-            "financial": [],
-            "operational": [],
-            "general": []
-        }
-        
-        for block in content_blocks:
-            if block['confidence'] >= 0.8:  # Only process high-confidence blocks
-                section_type = self._get_section_classification(block['text'])
-                sections[section_type].append(block['text'])
+        for table in result.tables:
+            if len(table.cells) > 0:
+                headers = [cell.content.strip() for cell in table.cells[0]]
                 
-        return sections
+                for row_cells in table.cells[1:]:
+                    row_data = {}
+                    for header, cell in zip(headers, row_cells):
+                        row_data[header] = cell.content.strip()
+                    
+                    row_text = self._format_row_as_text(row_data)
+                    content.append({
+                        'text': row_text,
+                        'role': 'table_row'
+                    })
 
-    def _get_section_prompt(self, section_type: str, content: List[str]) -> str:
-        """Generate appropriate prompt for each section type"""
-        prompts = {
-            "administrative": """
-            Create a clear summary of these administrative provisions that:
-            - Identifies key administrative requirements
-            - Highlights any deadlines or important dates
-            - Outlines specific procedures
-            Use bullet points for clarity.
-            """,
-            
-            "financial": """
-            Create a clear summary of these financial provisions that:
-            - Lists all budget allocations
-            - Identifies funding restrictions
-            - Highlights important financial deadlines
-            Maintain exact dollar amounts and percentages.
-            """,
-            
-            "operational": """
-            Create a clear summary of these operational procedures that:
-            - Outlines key operational requirements
-            - Lists important processes
-            - Identifies responsible parties
-            Use clear, actionable language.
-            """,
-            
-            "general": """
-            Create a clear summary of this content that:
-            - Highlights key points
-            - Maintains important details
-            - Preserves any specific requirements
-            """
-        }
-        
-        # Join all content blocks together
-        full_content = "\n\n".join(content)
-        
-        return f"""{prompts[section_type]}
+        section_chunks = {}
+        for chunk in content:
+            section = self._ask_gpt_which_section(chunk['text'])
+            if section not in section_chunks:
+                section_chunks[section] = []
+            section_chunks[section].append(chunk['text'])
 
-        Content to summarize:
-        {full_content}
-        """
+        sections = {}
+        for section_name, section_content in section_chunks.items():
+            example_content = example_document.sections.get(section_name)
+            sections[section_name] = self._generate_section(section_content, example_content)
 
-    def generate_summary(self, prompt: str) -> str:
-        """Generate summary using Azure OpenAI"""
+        return Document(sections)
+
+    def _ask_gpt_which_section(self, text):
+        """Ask GPT which section the text belongs to"""
+        prompt = f"""Which section does the following text belong to? Options are:
+        - Water (floods, ports)
+        - Fire (wildfires, fire stations)
+        - Administrative (employees, establishments, admin support, etc.)
+        - Other (anything else)
+
+        Text: {text}
+
+        Return only the section name, nothing else."""
+
         response = self.openai_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a document summarization assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            max_tokens=1000
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
         )
-        
         return response.choices[0].message.content.strip()
 
-def print_summaries(summaries: Dict[str, str]):
-    """Print summaries in a readable format"""
-    print("\n" + "="*80 + "\n")
-    
-    for section_type, summary in summaries.items():
-        if summary:  # Only print sections that have content
-            print(f"SECTION: {section_type.upper()}")
-            print("-" * 40)
-            print(summary)
-            print("\n" + "="*80 + "\n")
+    def _generate_section(self, section_content, example_content):
+        prompt = f"""Generate a section using these text chunks as source material.
+        Here's an example of what the section should look like:
+        {example_content}
 
-# Example usage
-if __name__ == "__main__":
-    # Initialize processor with your Azure keys and endpoints
-    processor = DocumentProcessor(
-        doc_intelligence_key=os.getenv("AZURE_API_KEY"),
-        doc_intelligence_endpoint=os.getenv("AZURE_ENDPOINT"),
-        openai_key=os.getenv("OPENAI_API_KEY"),
-        openai_endpoint=os.getenv("OPENAI_ENDPOINT")
+        Source chunks:
+        {' '.join(section_content)}"""
+
+        response = self.openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.choices[0].message.content.strip()
+
+    def _format_row_as_text(self, row_data):
+        """Convert a row's JSON data into a natural language description"""
+        descriptions = [f"the {key} is {value}" for key, value in row_data.items()]
+        return ". ".join(descriptions)
+
+
+class DocumentEvaluator:
+    def __init__(self, openai_client: AzureOpenAI):
+        self.openai_client = openai_client
+
+    def compare_documents(self, generated_document, example_document):
+        scores = {}
+        for section_name in example_document.sections:
+            if section_name in generated_document.sections:
+                scores[section_name] = self._compare_sections(
+                    generated_document.sections[section_name],
+                    example_document.sections[section_name]
+                )
+            else:
+                scores[section_name] = 0
+
+        return {
+            'section_scores': scores,
+            'overall_score': sum(scores.values()) / len(scores)
+        }
+
+    def _compare_sections(self, generated_section, example_section):
+        prompt = f"""Compare these two sections and rate the generated section on a scale of 1 to 10.
+        Here's the example section:
+        {example_section}
+
+        Here's the generated section:
+        {generated_section}
+
+        Return only the score, nothing else."""
+
+        response = self.openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return float(response.choices[0].message.content.strip())
+            
+
+
+def main():
+    doc_client = DocumentIntelligenceClient(
+        endpoint=os.getenv("AZURE_ENDPOINT"),
+        credential=AzureKeyCredential(os.getenv("AZURE_API_KEY"))
     )
-    
-    # Process documents
-    summaries = processor.process_documents([
-        "./documents/AdminProvisions.pdf",
-    ])
-    
-    # Print results
-    print_summaries(summaries)
+
+    openai_client = AzureOpenAI(
+        api_version="2024-08-01-preview",
+        azure_endpoint=os.getenv("OPENAI_ENDPOINT"),
+        api_key=os.getenv("AZURE_OPENAI_API_KEY")
+    )
+
+    # Example document 
+    example_document = Document({
+        "Water": """The region faces significant water-related challenges. Recent flooding 
+        has affected coastal areas, particularly around Port Harbor where infrastructure 
+        damage was reported at three major terminals. Flood control measures implemented 
+        last year have shown mixed results. The port authority has initiated a $2M project 
+        to upgrade flood barriers.""",
+        
+        "Fire": """Fire services have been enhanced with two new stations in the western 
+        district. The wildfire response team conducted 12 major operations this period, 
+        successfully containing fires before they reached residential areas. Station 
+        equipment upgrades are ongoing, with 5 new trucks deployed.""",
+        
+        "Administrative": """Current staff levels include 342 full-time employees across 
+        15 facilities. Administrative support services have been consolidated into 3 main 
+        centers. Employee training programs reached 89% completion rate. New establishment 
+        records show 27 auxiliary offices operating under revised protocols.""",
+        
+        "Other": """Miscellaneous developments include the implementation of new software 
+        systems and updated security protocols. Various community engagement initiatives 
+        were launched. External contractor relationships have been reviewed and updated 
+        per standard procedures."""
+    })
+
+    pipeline = DocumentProcessor(doc_client, openai_client)
+    evaluator = DocumentEvaluator(openai_client)
+
+    generated_document = pipeline.process_document("documents/AdminProvisions.pdf", example_document)
+    evaluation = evaluator.compare_documents(generated_document, example_document)
+    print(f"Overall score: {evaluation['overall_score']}")
+    print("\nSection scores:")
+    for section_name, score in evaluation['section_scores'].items():
+        print(f"{section_name}: {score}")
+
+    # Example output:
+    # Overall score: 3.25
+
+    # Section scores:
+    # Water: 0
+    # Fire: 0
+    # Administrative: 6.0
+    # Other: 7.0
+
+if __name__ == "__main__":
+    main()
