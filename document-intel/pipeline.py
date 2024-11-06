@@ -40,27 +40,46 @@ class DocumentProcessor:
         )
         result = poller.result()
 
+        # Get spans of all tables
+        table_spans = []
+        for table in result.tables:
+            if len(table.cells) > 0:
+                table_spans.append((table.spans[0].offset, table.spans[0].offset + table.spans[0].length))
+
+        # Filter paragraphs to exclude table content
         content = []
         for paragraph in result.paragraphs:
-            content.append({
-                'text': paragraph.content,
-                'role': paragraph.role
-            })
+            # Check if paragraph overlaps with any table
+            para_start = paragraph.spans[0].offset
+            para_end = para_start + paragraph.spans[0].length
+            
+            is_in_table = any(
+                (table_start <= para_start < table_end) or 
+                (table_start < para_end <= table_end)
+                for table_start, table_end in table_spans
+            )
+            
+            if not is_in_table:
+                content.append({
+                    'text': paragraph.content,
+                    'role': paragraph.role
+                })
 
         for table in result.tables:
             if len(table.cells) > 0:
+                table_data = []
                 headers = [cell.content.strip() for cell in table.cells[0]]
                 
                 for row_cells in table.cells[1:]:
                     row_data = {}
                     for header, cell in zip(headers, row_cells):
                         row_data[header] = cell.content.strip()
-                    
-                    row_text = self._format_row_as_text(row_data)
-                    content.append({
-                        'text': row_text,
-                        'role': 'table_row'
-                    })
+                    table_data.append(row_data)
+                
+                content.append({
+                    'text': str(table_data),
+                    'role': 'table'
+                })
 
         section_chunks = {}
         for chunk in content:
@@ -108,10 +127,6 @@ class DocumentProcessor:
         )
         return response.choices[0].message.content.strip()
 
-    def _format_row_as_text(self, row_data):
-        """Convert a row's JSON data into a natural language description"""
-        descriptions = [f"the {key} is {value}" for key, value in row_data.items()]
-        return ". ".join(descriptions)
 
 
 class DocumentEvaluator:
